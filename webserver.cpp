@@ -973,6 +973,69 @@ void handleFormConfig(AsyncWebServerRequest *request)
     showConfig();
 }
 
+// Les 256 octets réservés à la fin de la configuration gardent la même taille.
+static_assert(sizeof(config.zoneNamesVersion) + sizeof(config.zoneNames) == 256, "zone storage");
+void handleZoneNames(AsyncWebServerRequest *request) {
+  const bool initialized = memcmp(config.zoneNamesVersion, "ZN01", 4) == 0;
+  if (request->method() == HTTP_GET) {
+    String json = "{";
+    for (int i = 0; i < NB_FILS_PILOTES; ++i) {
+      if (i) json += ',';
+      json += F("\"fp");
+      json += i + 1;
+      json += F("\":\"");
+      if (initialized) {
+        for (size_t j = 0; j < sizeof(config.zoneNames[i]) && config.zoneNames[i][j]; ++j) {
+          char c = config.zoneNames[i][j];
+          if (c == '"' || c == '\\') json += '\\';
+          json += c;
+        }
+      }
+      json += '"';
+    }
+    json += '}';
+    AsyncWebServerResponse *response = request->beginResponse(200, "application/json; charset=utf-8", json);
+    response->addHeader("Cache-Control", "no-store");
+    request->send(response);
+    return;
+  }
+
+  if (!request->hasParam("zone", true) || !request->hasParam("name", true)) {
+    request->send(400);
+    return;
+  }
+  String zone = request->getParam("zone", true)->value();
+  String name = request->getParam("name", true)->value();
+  name.trim();
+  if (zone.length() != 1 || zone[0] < '1' || zone[0] > '0' + NB_FILS_PILOTES ||
+      name.length() >= sizeof(config.zoneNames[0])) {
+    request->send(400);
+    return;
+  }
+  for (size_t i = 0; i < name.length(); ++i) {
+    if ((uint8_t)name[i] < 32 || name[i] == 127) {
+      request->send(400);
+      return;
+    }
+  }
+  if (!initialized) {
+    memset(config.zoneNames, 0, sizeof(config.zoneNames));
+    memcpy(config.zoneNamesVersion, "ZN01", 4);
+  }
+  char *label = config.zoneNames[zone[0] - '1'];
+  if (name != label) {
+    char previous[sizeof(config.zoneNames[0])];
+    memcpy(previous, label, sizeof(previous));
+    name.toCharArray(label, sizeof(previous));
+    if (!saveConfig()) {
+      memcpy(label, previous, sizeof(previous));
+      request->send(500);
+      return;
+    }
+  }
+  request->send(200, "text/plain; charset=utf-8", name);
+}
+
 void handle_fw_upload(AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final) {
   if (!index) {
     Update.runAsync(true);

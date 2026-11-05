@@ -23,9 +23,9 @@
 // Définir ici le type de carte utilisé
 //#define REMORA_BOARD_V10  // Version 1.0
 //#define REMORA_BOARD_V11  // Version 1.1
-//#define REMORA_BOARD_V12  // Version 1.2
+#define REMORA_BOARD_V12  // Version 1.2
 //#define REMORA_BOARD_V13  // Version 1.3
-#define REMORA_BOARD_V14    // Version 1.4
+//#define REMORA_BOARD_V14    // Version 1.4
 //#define REMORA_BOARD_V15  // Version 1.5
 
 //  Définir ici les modules utilisés sur la carte Remora
@@ -85,16 +85,12 @@
   //#define DEBUG_INIT            /* Permet d'initialiser la connexion série pour debug */
   #define REBOOT_DELAY    100     /* Delay for rebooting once reboot flag is set */
 
-  // Définir ici les identifiants de
-  // connexion à votre réseau Wifi
-  // =====================================
-//  #define DEFAULT_WIFI_SSID "VotreSSID"
-//  #define DEFAULT_WIFI_PASS "VotreClé"
-  #define DEFAULT_WIFI_AP_PASS "Remora_WiFi"
-  // =====================================
+  // Point d'accès de configuration (le Wi-Fi de la maison est enregistré via l'interface).
+  #define DEFAULT_WIFI_AP_SSID "remora_chauffage"
+  #define DEFAULT_WIFI_AP_PASS "12345678"
   #define DEFAULT_OTA_PORT  8266
   #define DEFAULT_OTA_PASS  "Remora_OTA"
-  #define DEFAULT_HOSTNAME  "remora"
+  #define DEFAULT_HOSTNAME  "remora-chauffage"
   #include "Arduino.h"
   #include <EEPROM.h>
   #include <FS.h>

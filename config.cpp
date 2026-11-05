@@ -144,7 +144,7 @@ bool saveConfig (void)
     EEPROM.write(i, *pconfig++);
 
   // Physically save
-  EEPROM.commit();
+  if (!EEPROM.commit()) return false;
 
   // Read Again to see if saved ok, but do
   // not clear if error this avoid clearing

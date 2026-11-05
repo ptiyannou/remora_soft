@@ -69,7 +69,7 @@
     // console.log('addZoneTemplate ', id, zones);
     var template = '<div class="col-sm-6 col-md-4 zone">'
            + '  <div style="min-height:80px;" class="thumbnail" data-zone="#zone#" title="Gestion de la zone #zone#">'
-           + '    <div class="caption"><h5>Zone #zone#</h5><span class="icon iconCmd" style="font-size: 3.5em;"></span>'
+           + '    <div class="caption"><h5><strong>FP#zone#</strong> · <span class="zone-name">Zone #zone#</span></h5><button type="button" class="rename btn btn-link btn-xs">Renommer</button><span class="icon iconCmd" style="font-size: 3.5em;"></span>'
            + '    <div>'
            + '      <a href="#" class="actions btn btn-default conf" role="button">Confort</a>'
            + '      <a href="#" class="actions btn btn-default eco" role="button">ECO</a>'
@@ -84,6 +84,23 @@
     $('#tab_fp .zones').append(template); // On ajoute la template dans le body du panel
     var $div = $('#tab_fp .zones div.zone:last');
     // console.log('div.zone last', $div);
+    var number = id.replace('fp', '');
+    var $name = $div.find('.zone-name');
+    $div.find('.rename').on('click', function() {
+      var name = window.prompt('Nom de FP' + number + ' (laisser vide pour rétablir Zone ' + number + ')', $name.data('label') || '');
+      if (name === null) return;
+      name = name.trim();
+      if (new Blob([name]).size > 35) {
+        window.alert('Nom trop long (35 octets maximum).');
+        return;
+      }
+      var $button = $(this).prop('disabled', true);
+      $.post('/zone-names', {zone: number, name: name}).done(function(saved) {
+        $name.data('label', saved).text(saved || 'Zone ' + number);
+      }).fail(function() {
+        window.alert('Le nom de la zone n’a pas pu être enregistré.');
+      }).always(function() { $button.prop('disabled', false); });
+    });
     activeZone(id.replace('fp', ''), zones[id]); // On active le bon bouton et l'image associée
     // On ajoute le bind sur click sur les boutons
     $('.actions', $div).on('click', function(e) {
@@ -300,6 +317,18 @@
           for (var k in data) {
             addZoneTemplate(k, data); // On ajoute l'affichage d'une zone
           }
+          var $zones = $('#tab_fp .zones .thumbnail');
+          $zones.find('.rename').prop('disabled', true);
+          $.getJSON('/zone-names').done(function(names) {
+            $zones.each(function() {
+              var number = $(this).data('zone');
+              var label = names['fp' + number] || '';
+              $(this).find('.zone-name').data('label', label).text(label || 'Zone ' + number);
+            });
+            $zones.find('.rename').prop('disabled', false);
+          }).fail(function() {
+            $zones.find('.rename').text('Noms indisponibles');
+          });
           $('body').addClass('loaded'); // On masque le loader
           // On ajoute un bind sur les boutons d'action généraux
           $('#tab_fp .all .actions').unbind('click').click(function(e) {

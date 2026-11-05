@@ -139,7 +139,8 @@ typedef struct
   uint8_t  filler[128];      		   // in case adding data in config avoiding loosing current conf by bad crc
   _emoncms emoncms;                // Emoncms configuration
   _jeedom  jeedom;                 // jeedom configuration
-  uint8_t  filler1[256];           // Another filler in case we need more
+  char zoneNamesVersion[4];
+  char zoneNames[7][36];           // UTF-8, 35 octets plus le terminateur
   uint16_t crc;
 } _Config;
 

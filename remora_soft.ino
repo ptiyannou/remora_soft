@@ -210,49 +210,25 @@ int WifiHandleConn(boolean setup = false)
     DebugF("========== SDK Saved parameters Start");
     WiFi.printDiag(DEBUG_SERIAL);
     DebuglnF("========== SDK Saved parameters End");
-
-    #if defined (DEFAULT_WIFI_SSID) && defined (DEFAULT_WIFI_PASS)
-      DebugF("Connection au Wifi : ");
-      Debug(DEFAULT_WIFI_SSID);
-      DebugF(" avec la clé '");
-      Debug(DEFAULT_WIFI_PASS);
-      DebugF("'...");
-      Debugflush();
-      WiFi.begin(DEFAULT_WIFI_SSID, DEFAULT_WIFI_PASS);
-    #else
-      if (*config.ssid) {
-        DebugF("Connection à: ");
-        Debug(config.ssid);
-        Debugflush();
-
-        // Do wa have a PSK ?
-        if (*config.psk) {
-          // protected network
-          Debug(F(" avec la clé '"));
-          Debug(config.psk);
-          Debug(F("'..."));
-          Debugflush();
-          WiFi.begin(config.ssid, config.psk);
-        } else {
-          // Open network
-          Debug(F("AP Ouvert"));
-          Debugflush();
-          WiFi.begin(config.ssid);
-        }
+    // Utilise le "Nom réseau" configuré dans l'interface Web comme hostname DHCP
+    if (*config.host) {
+       WiFi.hostname(config.host);
+    } else {
+       WiFi.hostname(DEFAULT_HOSTNAME);
+    }
+    if (*config.ssid) {
+      WiFi.mode(WIFI_STA);
+      WiFi.begin(config.ssid, config.psk);
+      timeout = 25;
+      while ((ret = WiFi.status()) != WL_CONNECTED && timeout) {
+        LedRGBON(COLOR_ORANGE);
+        delay(50);
+        LedRGBOFF();
+        delay(150);
+        --timeout;
       }
-    #endif
-
-    timeout = 25; // 25 * 200 ms = 5 sec time out
-
-    // 200 ms loop
-    while ( ((ret = WiFi.status()) != WL_CONNECTED) && timeout )
-    {
-      // Orange LED
-      LedRGBON(COLOR_ORANGE);
-      delay(50);
-      LedRGBOFF();
-      delay(150);
-      --timeout;
+    } else {
+      ret = WL_DISCONNECTED;
     }
 
     // connected ? disable AP, client mode only
@@ -266,26 +242,10 @@ int WifiHandleConn(boolean setup = false)
 
     // not connected ? start AP
     } else {
-      char ap_ssid[32];
-      DebugF("Erreur, passage en point d'acces ");
-      Debugln(DEFAULT_HOSTNAME);
-
-      // protected network
-      DebugF(" avec la clé '");
-      if (*config.ap_psk) {
-        Debug(config.ap_psk);
-      } else {
-        Debug(DEFAULT_WIFI_AP_PASS);
-      }
-      Debugln("'");
-      Debugflush();
-
-      if (*config.ap_psk) {
-        WiFi.softAP(DEFAULT_HOSTNAME, config.ap_psk);
-      } else {
-        WiFi.softAP(DEFAULT_HOSTNAME, DEFAULT_WIFI_AP_PASS);
-      }
-      WiFi.mode(WIFI_AP_STA);
+      WiFi.mode(*config.ssid ? WIFI_AP_STA : WIFI_AP);
+      DebugF("Point d'accès de configuration : ");
+      Debugln(DEFAULT_WIFI_AP_SSID);
+      WiFi.softAP(DEFAULT_WIFI_AP_SSID, *config.ap_psk ? config.ap_psk : DEFAULT_WIFI_AP_PASS);
 
       DebugF("IP address   : "); Debugln(WiFi.softAPIP());
       DebugF("MAC address  : "); Debugln(WiFi.softAPmacAddress());
@@ -626,6 +586,7 @@ void mysetup()
       request->send(200, "text/json", response);
     });
 
+    server.on("/zone-names", HTTP_GET | HTTP_POST, handleZoneNames);
     server.on("/config_form.json", HTTP_POST, handleFormConfig);
     server.on("/factory_reset",handleFactoryReset );
     server.on("/reset", handleReset);
