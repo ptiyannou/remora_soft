@@ -131,7 +131,7 @@ int setfp_interne(uint8_t fp, char cOrdre)
   else
   {
     // Commande à passer
-    uint8_t fpcmd1, fpcmd2;
+    uint8_t fpcmd1 = LOW, fpcmd2 = LOW;
 
     // tableau d'index de 0 à 6 pas de 1 à 7
     // on en profite pour Sauver l'état
@@ -156,6 +156,8 @@ int setfp_interne(uint8_t fp, char cOrdre)
         // Délestage => Hors gel => Commande 1/0
         case 'D': fpcmd1=HIGH; fpcmd2=LOW;  break;
     }
+
+    Debugf("FP%d cmd=%c fpcmd1=%d fpcmd2=%d\r\n", fp, cOrdre, fpcmd1, fpcmd2);
 
     // On positionne les sorties physiquement
     _digitalWrite(SortiesFP[2*(fp-1)], fpcmd1);
