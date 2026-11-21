@@ -1,3 +1,18 @@
+# Fork ptiyannou — modifications par rapport à hallard/remora_soft
+
+Ce fork ajoute les modifications suivantes au firmware Remora (ESP8266) d'origine :
+
+- **Démarrage en Confort** : à l'initialisation, toutes les sorties fil pilote passent en mode Confort. Les commandes reçues sont tracées sur la liaison série.
+- **Connexion Wi-Fi simplifiée** : la carte se connecte au réseau domestique enregistré depuis l'interface Web (SSID et clé stockés dans sa configuration, aucun identifiant dans le code). Si la connexion échoue, elle ouvre le point d'accès de configuration `remora_chauffage`.
+- **Nom réseau** : le « Nom réseau » saisi dans l'interface Web sert de nom d'hôte DHCP.
+- **Noms des zones** : les 7 zones fil pilote peuvent être renommées depuis l'interface Web. Les noms sont conservés en EEPROM et exposés par l'API `/zone-names` (GET/POST).
+
+Voir toutes les différences : [comparaison avec hallard/remora_soft](https://github.com/hallard/remora_soft/compare/master...ptiyannou:master).
+
+**Intégration Homey (SDK 3)** : l'application Homey / SHS pour piloter ce boîtier est dans un dépôt séparé, [ptiyannou/homey-remora-fil-pilote](https://github.com/ptiyannou/homey-remora-fil-pilote).
+
+---
+
 # Version Logicielle pour toutes les versions du matériel
 
 Cette version logicielle est compatible avec la version matérielle [1.2][1] ainsi que les anciennes versions des cartes electroniques. Elle est aussi compatible avec les cartes à base d'ESP8266 via un [adaptateur][5]
